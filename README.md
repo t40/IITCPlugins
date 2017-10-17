@@ -1,8 +1,11 @@
 IITCPlugins
 ===========
 
-Some Plugins I have been tweaking/hacking/building for IITC &amp; Ingress
+Some Plugins I have been tweaking/hacking/building for IITC & Ingress
 
+An example here.
+
+![](polygon selection.png)
 
 What is here
 ===========
@@ -29,6 +32,6 @@ Polygon-Fly-Links, will provide the same cool functionality that flylinks does, 
 
 Bugs
 ===========
-Yeah... so i cheated, on multiple counts... 
+Yeah... so i cheated, on multiple counts...
 
 1 - In essence (and primarily out of laziness) the original plugins were renamed (and namespace to allow loading of both plugins), i did no real work to improve the existing code.
