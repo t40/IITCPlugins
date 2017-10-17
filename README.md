@@ -30,5 +30,5 @@ Polygon-Fly-Links, will provide the same cool functionality that flylinks does, 
 Bugs
 ===========
 Yeah... so i cheated, on multiple counts... 
+
 1 - In essence (and primarily out of laziness) the original plugins were renamed (and namespace to allow loading of both plugins), i did no real work to improve the existing code.
-2 - The polygons are not true polygons. Currently it uses draws a rectangle around the polygon and uses that for easy coordinate comaprison. This can be fixed by using a raycasting method, this has been on my todo list for a while...

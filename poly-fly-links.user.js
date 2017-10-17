@@ -1,10 +1,10 @@
 // ==UserScript==
-// @id             poly-fly-links@chrislennon
+// @id             poly-fly-links@Seraphli
 // @name           IITC plugin: Fly Links - modified for limiting to Draw Tools polygon.
 // @category       Layer
 // @version        0.2.1.20140815.141737
-// @updateURL      https://raw.githubusercontent.com/chrislennon/IITCPlugins/master/poly-fly-links.meta.js
-// @downloadURL    https://raw.githubusercontent.com/chrislennon/IITCPlugins/master/poly-fly-links.user.js
+// @updateURL      https://raw.githubusercontent.com/Seraphli/IITCPlugins/master/poly-fly-links.meta.js
+// @downloadURL    https://raw.githubusercontent.com/Seraphli/IITCPlugins/master/poly-fly-links.user.js
 // @description    [jonatkins-2014-08-15-141737] Calculate how to link the portals to create the largest tidy set of nested fields. Enable from the layer chooser. Limits to a polygon. drawTools Required.
 // @include        https://www.ingress.com/intel*
 // @include        http://www.ingress.com/intel*
@@ -32,7 +32,7 @@ plugin_info.pluginId = 'poly-fly-links';
    *
    * This is a hacked together version of the IITC plugin: Fly Links (v0.2.1.20140815.141737) http://iitc.jonatkins.com/release/plugins/fly-links.user.js
    *
-   * todo : 
+   * todo :
    *  -polygons currently handled as "rectanges", thus outlying portals from polygons can slip in - need to find a way to calculate incusion to a true polygon
    */
 
@@ -56,29 +56,54 @@ window.plugin.polyFlylinks.updateLayer = function() {
 
   window.plugin.polyFlylinks.linksLayerGroup.clearLayers();
   window.plugin.polyFlylinks.fieldsLayerGroup.clearLayers();
-  var ctrl = [$('.leaflet-control-layers-selector + span:contains("Poly Fly links")').parent(), 
+  var ctrl = [$('.leaflet-control-layers-selector + span:contains("Poly Fly links")').parent(),
               $('.leaflet-control-layers-selector + span:contains("Poly Fly fields")').parent()];
   if (Object.keys(window.portals).length > window.plugin.polyFlylinks.MAX_PORTALS_TO_OBSERVE) {
     $.each(ctrl, function(guid, ctl) {ctl.addClass('disabled').attr('title', 'Too many portals: ' + Object.keys(window.portals).length);});
     return;
   }
-  
+
   var locations = [];
 
   var bounds;
+  var pLayer;
   window.plugin.drawTools.drawnItems.eachLayer(function(layer) {
       if (!(layer instanceof L.GeodesicPolygon)) {
           console.log("polygon-portals-list error: layer was not a closed polygon - please use drawTools plugin polgon tool.");
           return;
       }
       else{
-            bounds = layer.getBounds();
+          bounds = layer.getBounds();
+          pLayer = layer;
       }
   });
+  var polygon = [];
+  pLayer._latlngs.forEach(function(point){
+      polygon.push([point.lat,point.lng]);
+  });
+
+  var inside = function (point, vs) {
+    // ray-casting algorithm based on
+    // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+
+    var x = point[0], y = point[1];
+
+    var inside = false;
+    for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+        var xi = vs[i][0], yi = vs[i][1];
+        var xj = vs[j][0], yj = vs[j][1];
+
+        var intersect = ((yi > y) != (yj > y))
+            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+
+    return inside;
+  };
 
   $.each(window.portals, function(guid, portal) {
     var ll = portal.getLatLng();
-    if (bounds.contains(ll)) {
+    if (inside([ll.lat,ll.lng], polygon)) {
       var p = map.project(portal.getLatLng(), window.plugin.polyFlylinks.PROJECT_ZOOM);
       locations.push(p);
     }
@@ -94,28 +119,28 @@ window.plugin.polyFlylinks.updateLayer = function() {
 
     var poly = L.polyline([alatlng, blatlng], style);
     poly.addTo(window.plugin.polyFlylinks.linksLayerGroup);
-  }
-  
+  };
+
   var drawField = function(a, b, c, style) {
     var alatlng = map.unproject(a, window.plugin.polyFlylinks.PROJECT_ZOOM);
     var blatlng = map.unproject(b, window.plugin.polyFlylinks.PROJECT_ZOOM);
     var clatlng = map.unproject(c, window.plugin.polyFlylinks.PROJECT_ZOOM);
-    
+
     var poly = L.polygon([alatlng, blatlng, clatlng], style);
     poly.addTo(window.plugin.polyFlylinks.fieldsLayerGroup);
-  }
-  
+  };
+
   if (locations.length > window.plugin.polyFlylinks.MAX_PORTALS_TO_LINK) {
     $.each(ctrl, function(guid, ctl) {ctl.addClass('disabled').attr('title', 'Too many portals (linked/observed): ' + locations.length + '/' + Object.keys(window.portals).length);});
     return;
   }
   $.each(ctrl, function(guid, ctl) {ctl.removeClass('disabled').attr('title', 'portals (linked/observed): ' + locations.length + '/' + Object.keys(window.portals).length);});
-  
+
   var EPS = 1e-9;
   var det = function(a, b, c) {
     return a.x * b.y - a.y * b.x + b.x * c.y - b.y * c.x + c.x * a.y - c.y * a.x;
-  }
-  
+  };
+
   var convexHull = function(points) {
     if (points.length < 3)
       return [];
@@ -143,7 +168,7 @@ window.plugin.polyFlylinks.updateLayer = function() {
       } else {
         result.push(ai);
       }
-    }
+    };
     var minxi = 0;
     var maxxi = 0;
     var index = [];
@@ -157,10 +182,10 @@ window.plugin.polyFlylinks.updateLayer = function() {
     func(minxi, maxxi, index);
     func(maxxi, minxi, index);
     return result;
-  }
-  
+  };
+
   var index = convexHull(locations);
-  
+
   var triangulate = function(index, locations) {
     if (index.length == 0)
       return {edges: [], triangles: []};
@@ -211,7 +236,7 @@ window.plugin.polyFlylinks.updateLayer = function() {
         data[_i[0]][_i[1]-_i[0]][_i[2]-_i[1]] = {height: besth, index: besthi};
       }
       return data[_i[0]][_i[1]-_i[0]][_i[2]-_i[1]].height;
-    }
+    };
     var subindex = [];
     for (var i = 0; i < locations.length; ++i) {
       subindex.push(i);
@@ -238,7 +263,7 @@ window.plugin.polyFlylinks.updateLayer = function() {
         best[len][k] = {height: t, length: tlen};
       }
     }
-    
+
     var edges = [];
     var triangles = [];
     var makesubtriangulation = function _makesubtriangulation(ai, bi, ci, depth) {
@@ -253,7 +278,7 @@ window.plugin.polyFlylinks.updateLayer = function() {
         edges.push(new window.plugin.polyFlylinks.Edge(locations[bi], locations[data[_i[0]][_i[1]-_i[0]][_i[2]-_i[1]].index], depth));
         edges.push(new window.plugin.polyFlylinks.Edge(locations[ci], locations[data[_i[0]][_i[1]-_i[0]][_i[2]-_i[1]].index], depth));
       }
-    }
+    };
     var maketriangulation = function _maketriangulation(len, a) {
       edges.push(new window.plugin.polyFlylinks.Edge(locations[index[a]], locations[index[a+len]], 0));
       if (best[len][a].length == -1)
@@ -261,18 +286,18 @@ window.plugin.polyFlylinks.updateLayer = function() {
       makesubtriangulation(index[a], index[a+best[len][a].length], index[a+len], 1);
       _maketriangulation(best[len][a].length, a);
       _maketriangulation(len - best[len][a].length, a + best[len][a].length);
-    }
+    };
     maketriangulation(index.length - 1, 0);
     return {edges: edges, triangles: triangles};
-  }
-  
+  };
+
   var triangulation = triangulate(index, locations);
   var edges = triangulation.edges;
   var triangles = triangulation.triangles;
 
   $.each(edges, function(idx, edge) {
     drawLink(edge.a, edge.b, {
-      color: '#FF0000',
+      color: '#FF6600',
       opacity: 1,
       weight: 1.5,
       clickable: false,
@@ -280,35 +305,35 @@ window.plugin.polyFlylinks.updateLayer = function() {
       dashArray: [6, 4],
     });
   });
-  
+
   $.each(triangles, function(idx, triangle) {
     drawField(triangle.a, triangle.b, triangle.c, {
       stroke: false,
       fill: true,
-      fillColor: '#FF0000',
+      fillColor: '#FF6600',
       fillOpacity: 1 - Math.pow(0.85, triangle.depth),
       clickable: false,
     });
   });
-}
+};
 
 window.plugin.polyFlylinks.Edge = function(a, b, depth) {
   this.a = a;
   this.b = b;
   this.depth = depth;
-}
+};
 
 window.plugin.polyFlylinks.Triangle = function(a, b, c, depth) {
   this.a = a;
   this.b = b;
   this.c = c;
   this.depth = depth;
-}
+};
 
 window.plugin.polyFlylinks.setup = function() {
   window.plugin.polyFlylinks.linksLayerGroup = new L.LayerGroup();
   window.plugin.polyFlylinks.fieldsLayerGroup = new L.LayerGroup();
-  
+
   window.addHook('mapDataRefreshEnd', function(e) {
     window.plugin.polyFlylinks.updateLayer();
   });
@@ -319,7 +344,7 @@ window.plugin.polyFlylinks.setup = function() {
 
   window.addLayerGroup('Poly Fly links', window.plugin.polyFlylinks.linksLayerGroup, false);
   window.addLayerGroup('Poly Fly fields', window.plugin.polyFlylinks.fieldsLayerGroup, false);
-}
+};
 var setup = window.plugin.polyFlylinks.setup;
 
 // PLUGIN END //////////////////////////////////////////////////////////
@@ -337,5 +362,3 @@ var info = {};
 if (typeof GM_info !== 'undefined' && GM_info && GM_info.script) info.script = { version: GM_info.script.version, name: GM_info.script.name, description: GM_info.script.description };
 script.appendChild(document.createTextNode('('+ wrapper +')('+JSON.stringify(info)+');'));
 (document.body || document.head || document.documentElement).appendChild(script);
-
-
