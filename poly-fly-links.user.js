@@ -2,10 +2,10 @@
 // @id             poly-fly-links@Seraphli
 // @name           IITC plugin: Fly Links - modified for limiting to Draw Tools polygon.
 // @category       Layer
-// @version        0.2.2.20171017.1625
+// @version        0.2.2.20171017.1641
 // @updateURL      https://raw.githubusercontent.com/Seraphli/IITCPlugins/master/poly-fly-links.meta.js
 // @downloadURL    https://raw.githubusercontent.com/Seraphli/IITCPlugins/master/poly-fly-links.user.js
-// @description    [Seraphli-2017-10-17-1625] Calculate how to link the portals to create the largest tidy set of nested fields. Enable from the layer chooser. Limits to a polygon. drawTools Required.
+// @description    [Seraphli-2017-10-17-1641] Calculate how to link the portals to create the largest tidy set of nested fields. Enable from the layer chooser. Limits to a polygon. drawTools Required.
 // @include        https://www.ingress.com/intel*
 // @include        http://www.ingress.com/intel*
 // @match          https://www.ingress.com/intel*
@@ -77,6 +77,9 @@ window.plugin.polyFlylinks.updateLayer = function() {
           pLayer = layer;
       }
   });
+  if (!pLayer) {
+      return;
+  }
   var polygon = [];
   pLayer._latlngs.forEach(function(point){
       polygon.push([point.lat,point.lng]);
