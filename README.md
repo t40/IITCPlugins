@@ -5,7 +5,7 @@ Some Plugins I have been tweaking/hacking/building for IITC & Ingress
 
 An example here.
 
-![](polygon selection.png)
+![](./polygon-selection.png)
 
 What is here
 ===========
