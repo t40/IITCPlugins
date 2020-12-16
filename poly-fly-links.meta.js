@@ -7,9 +7,9 @@
 // @updateURL      https://raw.githubusercontent.com/Seraphli/IITCPlugins/master/poly-fly-links.meta.js
 // @downloadURL    https://raw.githubusercontent.com/Seraphli/IITCPlugins/master/poly-fly-links.user.js
 // @description    [Seraphli-2017-10-17-1641] Display a sortable list of all visible portals within a polygon. drawTools Required.
-// @include        https://www.ingress.com/intel*
-// @include        http://www.ingress.com/intel*
-// @match          https://www.ingress.com/intel*
-// @match          http://www.ingress.com/intel*
+// @include        https://*.ingress.com/intel*
+// @include        http://*.ingress.com/intel*
+// @match          https://*.ingress.com/intel*
+// @match          http://*.ingress.com/intel*
 // @grant          none
 // ==/UserScript==
